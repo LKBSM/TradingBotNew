@@ -1,0 +1,9 @@
+﻿[build]
+builder = "nixpacks"
+
+[build.nixpacksPlan.phases.install]
+cmds = ["bash install.sh"]
+
+[deploy]
+startCommand = "python parallel_training.py"
+restartPolicyType = "never"
