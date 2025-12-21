@@ -15,7 +15,7 @@ import ta
 from src.environment.risk_manager import DynamicRiskManager as RiskManager
 # Assurez-vous que les fichiers strategy_features.py et risk_manager.py sont dans le bon chemin
 from src.tests.monitor_training import TradeLogger
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from src.environment.strategy_features import SmartMoneyEngine
 
@@ -23,29 +23,57 @@ from src.environment.strategy_features import SmartMoneyEngine
 # Ces paramètres sont cruciaux pour le bon fonctionnement.
 try:
     from src.config import (
-        LOOKBACK_WINDOW_SIZE, INITIAL_BALANCE, TRANSACTION_FEE_PERCENTAGE, TRADE_COMMISSION_PER_TRADE,
-        SLIPPAGE_PERCENTAGE, REWARD_SCALING_FACTOR,
-        ALLOW_NEGATIVE_REVENUE_SELL, ALLOW_NEGATIVE_BALANCE, MINIMUM_ALLOWED_BALANCE, MIN_TRADE_QUANTITY,
-        ACTION_SPACE_TYPE, FEATURES, OHLCV_COLUMNS,
+        LOOKBACK_WINDOW_SIZE, INITIAL_BALANCE, TRANSACTION_FEE_PERCENTAGE,
+        TRADE_COMMISSION_PER_TRADE, SLIPPAGE_PERCENTAGE, REWARD_SCALING_FACTOR,
+        ALLOW_NEGATIVE_REVENUE_SELL, ALLOW_NEGATIVE_BALANCE, MINIMUM_ALLOWED_BALANCE,
+        MIN_TRADE_QUANTITY,ACTION_SPACE_TYPE, FEATURES, OHLCV_COLUMNS,
         DOWNSIDE_PENALTY_MULTIPLIER, OVERNIGHT_HOLDING_PENALTY, HOLD_PENALTY_FACTOR,
-        WINNING_TRADE_BONUS, LOSING_TRADE_PENALTY,
-        FAILED_TRADE_ATTEMPT_PENALTY, TRADE_COOLDOWN_STEPS, RAPID_TRADE_PENALTY,
-        TRAIN_END_DATE, SMC_CONFIG,
+        WINNING_TRADE_BONUS, LOSING_TRADE_PENALTY, FAILED_TRADE_ATTEMPT_PENALTY,
+        TRADE_COOLDOWN_STEPS, RAPID_TRADE_PENALTY, TRAIN_END_DATE, SMC_CONFIG,
         RISK_PERCENTAGE_PER_TRADE, TAKE_PROFIT_PERCENTAGE, STOP_LOSS_PERCENTAGE,
         TSL_START_PROFIT_MULTIPLIER, TSL_TRAIL_DISTANCE_MULTIPLIER,
-        # --- NEW REWARD HYPERPARAMETERS ---
-        MAX_LEVERAGE, MAX_DURATION_STEPS,
+        MAX_LEVERAGE, MAX_DURATION_STEPS,  # <--- VERIFIEZ CETTE LIGNE
         W_RETURN, W_DRAWDOWN, W_FRICTION, W_LEVERAGE, W_TURNOVER, W_DURATION
     )
 except ImportError:
-    print("WARNING: Could not import from src.config. Using default environment parameters.")
-    # --- Default Environment Configuration (Fallback) ---
-    TRAIN_END_DATE = "2025-05-15 23:59:00"
+    print("WARNING: Could not import from config. Using production fallback parameters.")
+    # --- Production Fallback (Mirrors config.py exactly) ---
     INITIAL_BALANCE = 1000.0
     TRANSACTION_FEE_PERCENTAGE = 0.0005  # 0.05%
     SLIPPAGE_PERCENTAGE = 0.0001
     TRADE_COMMISSION_PER_TRADE = 0.0005
+
     LOOKBACK_WINDOW_SIZE = 60
+    RISK_PERCENTAGE_PER_TRADE = 0.01  # 1%
+    TAKE_PROFIT_PERCENTAGE = 0.02
+    STOP_LOSS_PERCENTAGE = 0.01
+
+    TSL_START_PROFIT_MULTIPLIER = 1.0
+    TSL_TRAIL_DISTANCE_MULTIPLIER = 0.5
+
+    ALLOW_NEGATIVE_REVENUE_SELL = False
+    ALLOW_NEGATIVE_BALANCE = False
+    MINIMUM_ALLOWED_BALANCE = 100.0
+    MIN_TRADE_QUANTITY = 0.01
+
+    # Reward Weights (Balanced for safety)
+    REWARD_SCALING_FACTOR = 100.0
+    W_RETURN = 1.0
+    W_DRAWDOWN = 2.0
+    W_FRICTION = 0.8
+    W_LEVERAGE = 2.0
+    W_TURNOVER = 0.1
+    W_DURATION = 0.3
+
+    # Penalties and Bonuses
+    DOWNSIDE_PENALTY_MULTIPLIER = 3.0
+    WINNING_TRADE_BONUS = 2.0
+    LOSING_TRADE_PENALTY = 5.0
+    TRADE_COOLDOWN_STEPS = 5
+    RAPID_TRADE_PENALTY = 5.0
+    MAX_LEVERAGE = 1.5
+    MAX_DURATION_STEPS = 12[cite: 1]
+
     OHLCV_COLUMNS = {
         "timestamp": "Date",
         "open": "Open",
@@ -54,53 +82,26 @@ except ImportError:
         "close": "Close",
         "volume": "Volume"
     }
-    SMC_CONFIG = {"RSI_WINDOW": 7, "MACD_FAST": 8, "MACD_SLOW": 17, "MACD_SIGNAL": 9, "BB_WINDOW": 20, "ATR_WINDOW": 7,
-                  "FRACTAL_WINDOW": 2, "FVG_THRESHOLD": 0.0}
-    RISK_PERCENTAGE_PER_TRADE = 0.01
-    TAKE_PROFIT_PERCENTAGE = 0.02
-    STOP_LOSS_PERCENTAGE = 0.01
-    TSL_START_PROFIT_MULTIPLIER = 1.0
-    TSL_TRAIL_DISTANCE_MULTIPLIER = 0.5
-    ALLOW_NEGATIVE_REVENUE_SELL = False
-    ALLOW_NEGATIVE_BALANCE = False
-    MINIMUM_ALLOWED_BALANCE = 100
-    REWARD_SCALING_FACTOR = 500.0
-    ACTION_SPACE_TYPE = "discrete"
-    MIN_TRADE_QUANTITY = 0.01
-    DOWNSIDE_PENALTY_MULTIPLIER = 5.0
-    OVERNIGHT_HOLDING_PENALTY = 0.0
-    HOLD_PENALTY_FACTOR = 0.005
-    WINNING_TRADE_BONUS = 5.0
-    LOSING_TRADE_PENALTY = 10.0
-    FAILED_TRADE_ATTEMPT_PENALTY = 0.0
-    TRADE_COOLDOWN_STEPS = 10
-    RAPID_TRADE_PENALTY = 10.0
+
+    SMC_CONFIG = {
+        "RSI_WINDOW": 7,
+        "MACD_FAST": 8,
+        "MACD_SLOW": 17,
+        "MACD_SIGNAL": 9,
+        "BB_WINDOW": 20,
+        "ATR_WINDOW": 7,
+        "FRACTAL_WINDOW": 2,
+        "FVG_THRESHOLD": 0.0,
+    }
+
     FEATURES = [
-        # 1. OHLCV de base (avec majuscule pour correspondre à la sortie de _process_data)
         'Open', 'High', 'Low', 'Close', 'Volume',
-
-        # 2. Indicateurs Techniques et Calculs Simples
-        'RSI',
-        'MACD_Diff', 'MACD_line', 'MACD_signal',  # MACD complet (corrigé pour MACD_line)
-        'BB_L', 'BB_M', 'BB_H',  # Bollinger Bands
-        'ATR',
-        'SPREAD', 'BODY_SIZE',  # Calculs simples
-
-        # 3. Smart Money Concepts (SMC) et Structure
-        'UP_FRACTAL', 'DOWN_FRACTAL',
-        'FVG_SIGNAL', 'FVG_SIZE_NORM',
-        'BOS_SIGNAL', 'CHOCH_SIGNAL',
-        'BULLISH_OB_HIGH', 'BULLISH_OB_LOW', 'BEARISH_OB_HIGH', 'BEARISH_OB_LOW',
-        'OB_STRENGTH_NORM'
-    ]    # --- NEW REWARD HYPERPARAMETERS (Defaults for Fallback) ---
-    MAX_LEVERAGE = 2.0  # Max 2:1 leverage limit
-    W_RETURN = 1.0
-    W_DRAWDOWN = 2.0
-    W_FRICTION = 0.8
-    W_LEVERAGE = 2.0
-    W_TURNOVER = 0.1
-    W_DURATION = 0.3
-    MAX_DURATION_STEPS = 12  # Ajoutez cette ligne si elle manque
+        'RSI', 'MACD_Diff', 'MACD_line', 'MACD_signal',
+        'BB_L', 'BB_M', 'BB_H', 'ATR', 'SPREAD', 'BODY_SIZE',
+        'UP_FRACTAL', 'DOWN_FRACTAL', 'FVG_SIGNAL', 'FVG_SIZE_NORM',
+        'BOS_SIGNAL', 'CHOCH_SIGNAL', 'BULLISH_OB_HIGH', 'BULLISH_OB_LOW',
+        'BEARISH_OB_HIGH', 'BEARISH_OB_LOW', 'OB_STRENGTH_NORM'
+    ]
 
 class TradingEnv(gym.Env):
     metadata = {"render_modes": ["human", "none"], "render_fps": 30}
