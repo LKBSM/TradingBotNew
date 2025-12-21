@@ -90,6 +90,20 @@ class RichProgressBarCallback(BaseCallback):
         return True
 
     def _on_rollout_end(self) -> None:
+        if self.model is not None and hasattr(self.model, 'ep_info_buffer') and len(self.model.ep_info_buffer) > 0:
+            # Afficher stats détaillées tous les 10 rollouts
+            if len(self.model.ep_info_buffer) >= 10:
+                recent_rewards = [ep['r'] for ep in list(self.model.ep_info_buffer)[-10:]]
+                avg_reward = np.mean(recent_rewards)
+                self.progress.update(
+                    self.task_id, 
+                    description=f"🤖 Training | Avg Reward (10 ep): {avg_reward:.2f}"
+                )
+        
+        # Log tous les 50k steps
+        if self.num_timesteps % 50000 == 0 and self.num_timesteps > 0:
+            print(f"\n📊 Checkpoint: {self.num_timesteps:,} steps | Progress: {(self.num_timesteps/self.total_timesteps)*100:.1f}%")
+        
         if self.model is not None and hasattr(self.model, 'ep_info_buffer') and self.model.ep_info_buffer:
             last_ep_reward = self.model.ep_info_buffer[-1]['r']
             self.progress.update(self.task_id, description=f"🤖 Last Reward: {last_ep_reward:.2f}")
@@ -621,6 +635,7 @@ if __name__ == '__main__':
         timesteps_per_run=20000,
         cumulative=True  # Apprentissage cumulatif
     )
+
 
 
 

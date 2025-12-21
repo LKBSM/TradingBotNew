@@ -245,6 +245,23 @@ def train_single_bot(
     - Commercial viability assessment
     """
     try:
+        
+        # ═══════════════════════════════════════════════════════════════
+        # LOGS DÉTAILLÉS POUR COLAB
+        # ═══════════════════════════════════════════════════════════════
+        from datetime import datetime
+        start_time_detailed = datetime.now()
+        
+        print("\n" + "=" * 70)
+        print(f"🤖 BOT {bot_id}/50 - DÉMARRAGE")
+        print("=" * 70)
+        print(f"⏰ Heure de démarrage: {start_time_detailed.strftime('%H:%M:%S')}")
+        print(f"🎯 Hyperparamètres:")
+        print(f"   Learning Rate: {hyperparams['learning_rate']:.2e}")
+        print(f"   Gamma: {hyperparams['gamma']}")
+        print(f"   Batch Size: {hyperparams['batch_size']}")
+        print(f"   N Steps: {hyperparams['n_steps']}")
+        print("=" * 70)
         start_time = datetime.now()
 
         # Update config with bot's hyperparameters
@@ -261,6 +278,11 @@ def train_single_bot(
         )
 
         training_duration = (datetime.now() - start_time).total_seconds()
+        
+        # Log de fin de training
+        print(f"\n✅ BOT {bot_id} - TRAINING TERMINÉ!")
+        print(f"   Durée: {training_duration/60:.1f} minutes")
+        print(f"   Timesteps: {config.TOTAL_TIMESTEPS_PER_BOT:,}")
 
         # Save model
         model_filename = f"bot_{bot_id:03d}_lr{hyperparams['learning_rate']:.0e}_g{hyperparams['gamma']}.zip"
@@ -271,6 +293,14 @@ def train_single_bot(
         train_metrics = evaluate_agent(agent, df_train)
         val_metrics = evaluate_agent(agent, df_val)
         test_metrics = evaluate_agent(agent, df_test)
+        
+        # Log après évaluation
+        print(f"\n📊 BOT {bot_id} - ÉVALUATION TERMINÉE")
+        print(f"   Train Sharpe: {train_metrics[1]:.2f}")
+        print(f"   Val Sharpe: {val_metrics[1]:.2f}")
+        print(f"   Test Sharpe: {test_metrics[1]:.2f}")
+        print(f"   Test Return: {test_metrics[0]*100:.2f}%")
+        print(f"   Test Profit: ${test_profit:.2f}")
 
         # Calculate profits
         initial_capital = config.INITIAL_BALANCE
@@ -303,6 +333,16 @@ def train_single_bot(
         meets_dd = test_metrics[4] < config.MAX_ACCEPTABLE_DD
 
         commercial_score = sum([is_profitable, meets_sharpe, meets_calmar, meets_dd])
+        
+        # Log du statut commercial
+        end_time_detailed = datetime.now()
+        total_duration = (end_time_detailed - start_time_detailed).total_seconds()
+        
+        print(f"\n🎯 BOT {bot_id} - RÉSULTAT FINAL")
+        print(f"   Statut Commercial: {commercial_status}")
+        print(f"   Score: {commercial_score}/4")
+        print(f"   Durée Totale: {total_duration/60:.1f} minutes")
+        print("=" * 70 + "\n")
 
         if commercial_score >= 3:
             commercial_status = "APPROVED"
@@ -655,5 +695,6 @@ def generate_comprehensive_report(df_results: pd.DataFrame, duration: float):
 
 if __name__ == "__main__":
     run_parallel_training()
+
 
 
