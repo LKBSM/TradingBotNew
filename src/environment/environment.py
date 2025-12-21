@@ -100,7 +100,7 @@ except ImportError:
     W_LEVERAGE = 2.0
     W_TURNOVER = 0.1
     W_DURATION = 0.3
-
+    MAX_DURATION_STEPS = 12  # Ajoutez cette ligne si elle manque
 
 class TradingEnv(gym.Env):
     metadata = {"render_modes": ["human", "none"], "render_fps": 30}
@@ -139,6 +139,7 @@ class TradingEnv(gym.Env):
 
         # --- NEW: Reward Weights and Limits (Hyperparameters) ---
         self.max_leverage_limit = kwargs.get('max_leverage_limit', MAX_LEVERAGE)
+        # Assurez-vous que cette ligne est présente dans le __init__
         self.max_duration_steps = kwargs.get('max_duration_steps', MAX_DURATION_STEPS)
         self.w_R = kwargs.get('w_R', W_RETURN)
         self.w_DD = kwargs.get('w_DD', W_DRAWDOWN)
