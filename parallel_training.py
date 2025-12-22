@@ -245,7 +245,8 @@ def train_single_bot(
     - Commercial viability assessment
     """
     try:
-        
+        import sys  # <--- AJOUTEZ CETTE LIGNE ICI (Sécurité Multiprocessing)
+        import os
         # ═══════════════════════════════════════════════════════════════
         # LOGS DÉTAILLÉS POUR COLAB
         # ═══════════════════════════════════════════════════════════════
