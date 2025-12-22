@@ -1,4 +1,11 @@
-﻿import os
+﻿import multiprocessing
+try:
+    multiprocessing.set_start_method('spawn', force=True)
+except RuntimeError:
+    pass  # Déjà défini (ignore)
+
+
+import os
 import sys
 import pandas as pd
 import numpy as np
