@@ -130,34 +130,50 @@ TRADE_COMMISSION_PER_TRADE = 0.0005  # $0.50 per $1000 traded
 ALLOW_NEGATIVE_REVENUE_SELL = False
 
 # ═════════════════════════════════════════════════════════════════════════════
-# 6. REWARD FUNCTION PARAMETERS (BALANCED FOR COMMERCIAL SUCCESS)
+# 6. REWARD FUNCTION PARAMETERS (OPTIMIZED FOR LEARNING)
 # ═════════════════════════════════════════════════════════════════════════════
 
-# Core scaling
-REWARD_SCALING_FACTOR = 100.0  # Reduced from 500 for stability
+# Core scaling - 1% return = 1.0 reward point
+# Keeps rewards in a range [-1, 1] which PPO loves
+REWARD_SCALING_FACTOR = 100.0
 
-# Penalties (reduced from aggressive values)
-DOWNSIDE_PENALTY_MULTIPLIER = 3.0  # Was 5.0 (too harsh)
-OVERNIGHT_HOLDING_PENALTY = 0.0  # Not applicable for 15min daytrading
-HOLD_PENALTY_FACTOR = 0.001  # Was 0.005 (discouraged holding too much)
-WINNING_TRADE_BONUS = 2.0  # Was 5.0 (more balanced)
-LOSING_TRADE_PENALTY = 5.0  # Was 10.0 (less punishing)
-FAILED_TRADE_ATTEMPT_PENALTY = 0.0  # No penalty for rejected trades
-TRADE_COOLDOWN_STEPS = 5  # Was 10 (allow more frequency)
-RAPID_TRADE_PENALTY = 5.0  # Was 10.0 (less restrictive)
+# -----------------------------------------------------------------------------
+# PENALTIES & BONUSES (The "Lazy Agent" Fix)
+# -----------------------------------------------------------------------------
+# CRITICAL FIX: Removed the massive 5.0 penalty for losing.
+# The PnL itself is already negative; adding a fixed penalty causes "fear of trading".
+LOSING_TRADE_PENALTY = 0.0       # Was 5.0 (Too harsh, caused fear)
+WINNING_TRADE_BONUS = 0.5        # Was 2.0 (Small cookie to encourage closing green)
 
-# Position limits
-MAX_LEVERAGE = 1.5  # Was 2.0 (safer for production)
-MAX_DURATION_STEPS = 12  # 3 hours max hold (was 2h - too short)
+# Friction: Fees are already subtracted from PnL.
+# We don't need a heavy extra penalty, or the bot won't enter trades.
+W_FRICTION = 0.1                 # Was 0.8 (Reduced to prevent entry paralysis)
 
-# Reward component weights (balanced for risk-adjusted returns)
-W_RETURN = 1.0  # Profitability (baseline)
-W_DRAWDOWN = 2.0  # Risk control (INCREASED - prioritize safety)
-W_FRICTION = 0.8  # Transaction costs (DECREASED - less punishing)
-W_LEVERAGE = 2.0  # Leverage compliance (INCREASED - enforce limits)
-W_TURNOVER = 0.1  # Overtrading (DECREASED - allow necessary trades)
-W_DURATION = 0.3  # Holding time (DECREASED - allow proper setups)
+# -----------------------------------------------------------------------------
+# RISK CONTROL WEIGHTS
+# -----------------------------------------------------------------------------
+# We still punish bad behavior, but proportionally.
 
+W_RETURN = 1.0       # Primary driver: Make Money
+W_DRAWDOWN = 0.5     # Was 2.0. Reduced so the bot isn't terrified of normal volatility.
+W_LEVERAGE = 1.0     # Enforce limits, but don't kill exploration.
+W_TURNOVER = 0.0     # Was 0.1. Let it trade as much as needed initially.
+W_DURATION = 0.1     # Was 0.3. Slight nudge to not hold forever.
+
+# -----------------------------------------------------------------------------
+# MISC PENALTIES
+# -----------------------------------------------------------------------------
+DOWNSIDE_PENALTY_MULTIPLIER = 1.0  # Was 3.0. Standard linear punishment for losses.
+OVERNIGHT_HOLDING_PENALTY = 0.0    # N/A for 15m timeframe
+HOLD_PENALTY_FACTOR = 0.0          # Was 0.001. Don't punish patience.
+FAILED_TRADE_ATTEMPT_PENALTY = 0.0 # No penalty for logic checks
+TRADE_COOLDOWN_STEPS = 2           # Was 5. Allow faster re-entry if signal is good.
+RAPID_TRADE_PENALTY = 1.0          # Was 5.0. Reduced.
+
+# Position limits (Keep safety hard-limits)
+MAX_LEVERAGE = 1.0                 # Safe baseline
+MAX_DURATION_STEPS = 40            # Increased from 12 (3h) to 40 (10h).
+                                   # 12 steps is too short for a trend to develop.
 # ═════════════════════════════════════════════════════════════════════════════
 # 7. TRAINING CONFIGURATION (⚠️ CRITICAL SECTION)
 # ═════════════════════════════════════════════════════════════════════════════

@@ -66,20 +66,20 @@ except ImportError:
     # Reward Weights
     REWARD_SCALING_FACTOR = 100.0
     W_RETURN = 1.0
-    W_DRAWDOWN = 2.0
-    W_FRICTION = 0.8
-    W_LEVERAGE = 2.0
-    W_TURNOVER = 0.1
-    W_DURATION = 0.3
+    W_DRAWDOWN = 0.5
+    W_FRICTION = 0.1
+    W_LEVERAGE = 1.0
+    W_TURNOVER = 0.0
+    W_DURATION = 0.1
 
     # Penalties and Bonuses
-    DOWNSIDE_PENALTY_MULTIPLIER = 3.0
+    DOWNSIDE_PENALTY_MULTIPLIER = 1.0
     WINNING_TRADE_BONUS = 2.0
     LOSING_TRADE_PENALTY = 5.0
     TRADE_COOLDOWN_STEPS = 5
-    RAPID_TRADE_PENALTY = 5.0
-    MAX_LEVERAGE = 1.5
-    MAX_DURATION_STEPS = 12  # ✅ CORRIGÉ: Supprimé [cite: 1
+    RAPID_TRADE_PENALTY = 1.0
+    MAX_LEVERAGE = 1.0
+    MAX_DURATION_STEPS = 40 # ✅ CORRIGÉ: Supprimé [cite: 1
 
     OHLCV_COLUMNS = {
         "timestamp": "Date",
