@@ -233,7 +233,7 @@ HYPERPARAM_SEARCH_SPACE = {
     'n_steps': [1024, 2048, 4096],  # 3 values (must be >= batch_size)
     'batch_size': [64, 128, 256],  # 3 values
     'gamma': [0.99, 0.995, 0.999],  # 3 values (discount factor)
-    'ent_coef': [0.01, 0.02, 0.05],  # 3 values (exploration)
+    'ent_coef': [0.02, 0.05, 0.10],  # 3 values (exploration) - INCREASED for more active trading
     'clip_range': [0.1, 0.2, 0.3]  # 3 values (PPO clip)
 }
 
@@ -246,7 +246,7 @@ MODEL_HYPERPARAMETERS = {
     "batch_size": 128,  # Minibatch size for updates
     "gamma": 0.99,  # Discount factor
     "learning_rate": 3e-5,  # Adam learning rate (conservative)
-    "ent_coef": 0.01,  # Entropy coefficient (exploration)
+    "ent_coef": 0.05,  # Entropy coefficient - INCREASED from 0.01 to encourage exploration
     "clip_range": 0.2,  # PPO clipping parameter
     "gae_lambda": 0.95,  # GAE lambda for advantage estimation
     "max_grad_norm": 0.5,  # Gradient clipping (stability)

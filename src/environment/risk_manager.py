@@ -32,11 +32,12 @@ class DynamicRiskManager:
     def _get_regime_scaling(self, regime_state: int) -> float:
         """
         Adjusts the position sizing aggressiveness based on the market regime.
+        CHANGED: 0.25 -> 0.5 (was too conservative, bot couldn't take meaningful positions)
         """
         if regime_state == 0:  # Low Volatility (Calm)
             return 1.0
         elif regime_state == 1:  # High Volatility (Chaos)
-            return 0.25
+            return 0.5  # Was 0.25 - increased to allow bot to trade during learning
         return 1.0
 
     def _get_regime_multiplier(self, regime_state: int) -> float:

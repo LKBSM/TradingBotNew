@@ -794,13 +794,15 @@ class TradingEnv(gym.Env):
         regime_state = 0 if bos_signal != 0 else 1
         self.risk_manager.market_state['current_regime'] = regime_state
 
-        # --- NOUVEAU : FILTRE DE CONFIANCE STRATÉGIQUE (VETO DE L'IA) ---
-        if action == 1 and regime_state == 1 and not is_long_position:
-            action = 0
-            self.actual_action_executed = 6
-            self.trade_details['trade_type'] = 'buy_veto_low_confidence'
-        elif action == 0 and regime_state == 0 and not is_long_position:
-            pass
+        # --- FILTRE DE CONFIANCE STRATÉGIQUE (DÉSACTIVÉ POUR ENCOURAGER L'EXPLORATION) ---
+        # ANCIEN CODE: Ce veto bloquait TOUS les achats en régime de chaos (regime_state=1),
+        # ce qui empêchait le bot d'apprendre à trader. Commenté pour permettre l'apprentissage.
+        # if action == 1 and regime_state == 1 and not is_long_position:
+        #     action = 0
+        #     self.actual_action_executed = 6
+        #     self.trade_details['trade_type'] = 'buy_veto_low_confidence'
+        # elif action == 0 and regime_state == 0 and not is_long_position:
+        #     pass
 
         # --- Initialize trade details ---
         self.trade_details = {
